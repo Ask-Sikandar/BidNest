@@ -1,5 +1,6 @@
 const express= require('express');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 const app=express();
 app.use(express.json());
@@ -46,13 +47,37 @@ app.post("/login", async (req, res) => {
             return res.status(401).send("Invalid username or password");
         }
 
+        // Generate a JWT token
+        const token = jwt.sign({ username }, 'secret', { expiresIn: '1h' });
+
         // Authentication successful
-        res.status(200).send("Login successful");
+        res.json({ token });
     } catch (error) {
         console.error(error.message);
         res.status(500).send("Error during login");
     }
 });
+
+
+app.post('/create_listing', async (req, res) => {
+    const data = req.body;
+  
+    // Check if all required fields are present in the request
+    const requiredFields = ['name', 'description', 'bedrooms', 'bathrooms', 'location', 'starting_bid', 'end_time', 'user_username'];
+    if (!requiredFields.every(field => data[field])) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+  
+    // Create a new property listing
+    const newListing = await db.query(
+        "Insert into properties" 
+    );
+  
+    // Add the new listing to the in-memory storage
+    propertyListings.push(newListing);
+  
+    return res.status(201).json({ message: 'Property listing created successfully' });
+  });
 
 
 app.listen(3000,()=>{
