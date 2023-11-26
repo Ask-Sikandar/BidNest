@@ -6,6 +6,7 @@ const app=express();
 app.use(express.json());
 const db = require('./db');
 
+
 //register user
 app.post("/register", async (req, res) => {
     try {
@@ -61,6 +62,8 @@ app.post("/login", async (req, res) => {
 
 app.post('/create_listing', async (req, res) => {
     const data = req.body;
+    const token = data[token];
+    console.log(token);
   
     // Check if all required fields are present in the request
     const requiredFields = ['name', 'description', 'bedrooms', 'bathrooms', 'location', 'starting_bid', 'end_time', 'user_username'];

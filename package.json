@@ -14,5 +14,6 @@
     "jsonwebtoken": "^9.0.2",
     "mysql": "^2.18.1",
     "mysql2": "^3.6.5"
-  }
+  },
+  "keywords": []
 }
