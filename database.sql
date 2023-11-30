@@ -1,10 +1,9 @@
 CREATE TABLE IF NOT EXISTS users (
-    username VARCHAR(50) UNIQUE NOT NULL,
+    username VARCHAR(50) PRIMARY KEY,
     email VARCHAR(100) UNIQUE NOT NULL,
     password VARCHAR(60) NOT NULL,
     name VARCHAR(100) NOT NULL,
     contact VARCHAR(50) NOT NULL,
-    UNIQUE KEY unique_combination (username, email)
 );
 
 CREATE TABLE IF NOT EXISTS properties (

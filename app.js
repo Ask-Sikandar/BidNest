@@ -61,12 +61,15 @@ app.post("/login", async (req, res) => {
 
 
 app.post('/create-property', (req, res) => {
-    const token = req.headers.authorization.split('.')[1];
+    if (!req.headers.authorization) {
+        return res.status(401).json({ message: 'Authorization header missing' });
+      }
+    const token = req.headers.authorization;
     jwt.verify(token, 'secret', (err, decoded) => {
       if (err) {
         return res.status(401).json({ message: 'Invalid token' });
       }
-      const property = new Property({
+      const property = {
         name: req.body.name,
         description: req.body.description,
         bedrooms: req.body.bedrooms,
@@ -75,8 +78,9 @@ app.post('/create-property', (req, res) => {
         starting_bid: req.body.starting_bid,
         end_time: req.body.end_time,
         user_username: req.body.user_username,
-      });
-      connection.query('INSERT INTO properties SET ?', property, (err, result) => {
+      };
+      console.log(property);
+      db.query('INSERT INTO properties SET ?', property, (err, result) => {
         if (err) {
           return res.status(500).json({ message: 'Error saving property' });
         }
@@ -92,7 +96,7 @@ app.post('/create-property', (req, res) => {
 //         return res.status(401).json({ message: 'Invalid token' });
 //       }
 //       const filters = req.body;
-//       const query = `SELECT * FROM properties WHERE name LIKE '%${filters.name}%' AND description LIKE '%${filters.description}%' AND bedrooms = ${filters.bedrooms} AND bathrooms = ${filters.bathrooms} AND location LIKE '%${filters.location}%' AND starting_bid >= ${filters.starting_bid} AND end_time <= '${filters.end_time}' AND user_username LIKE '%${filters.user_username}%'`;
+//       const query = `SELECT * FROM properties WHERE name LIKE '% ${filters.name}%' AND description LIKE '%${filters.description}%' AND bedrooms = ${filters.bedrooms} AND bathrooms = ${filters.bathrooms} AND location LIKE '%${filters.location}%' AND starting_bid >= ${filters.starting_bid} AND end_time <= '${filters.end_time}' AND user_username LIKE '%${filters.user_username}%'`;
 //       connection.query(query, (err, results) => {
 //         if (err) {
 //           return res.status(500).json({ message: 'Error searching properties' });
