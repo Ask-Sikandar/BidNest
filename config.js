@@ -4,8 +4,8 @@ const jwt = require('jsonwebtoken');
 
 const dbconfig = {
     host: 'localhost', // MySQL host (e.g., 'localhost')
-    user: 'user1', // MySQL username
-    password: 'Beaconhouse45', // MySQL password
+    user: 'root', // MySQL username
+    password: 'x2f9h3m6', // MySQL password
     database: 'bidnest' // MySQL database name
 };
 const connection = mysql.createConnection(dbconfig);
