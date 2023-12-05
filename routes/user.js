@@ -8,5 +8,6 @@ const userRouter = require('./user');
 router.post("/login", controllers.login);
 router.post("/register", controllers.register);
 router.post("/create-property", controllers.createproperty);
+router.post("/search-property", controllers.searchProperty);
 
 module.exports = router;
