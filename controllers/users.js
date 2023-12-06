@@ -55,17 +55,17 @@ exports.register = async (req, res) => {
 };
 exports.login = async (req, res) => {
     try {
-        const { username, password } = req.body;
+        const { email, password } = req.body;
 
         // Fetch the user from the database based on the username
         const [user] = await db.query(
-            "SELECT * FROM users WHERE username = ?",
-            [username]
+            "SELECT * FROM users WHERE email = ?",
+            [email]
         );
 
         if (user.length === 0) {
             // User not found
-            return res.status(401).send("Invalid username or password");
+            return res.status(401).send("Invalid email or password");
         }
 
         // Compare the provided password with the stored hashed password
@@ -77,7 +77,7 @@ exports.login = async (req, res) => {
         }
 
         // Generate a JWT token
-        const token = jwt.sign({ username }, 'secret', { expiresIn: '1h' });
+        const token = jwt.sign({ email }, 'secret', { expiresIn: '1h' });
 
         // Authentication successful
         res.json({ token });
@@ -115,6 +115,30 @@ exports.createproperty = async (req, res) => {
       });
     });
   };
+exports.viewProperty = async (req, res) => {
+  if (!req.headers.authorization) {
+    return res.status(401).json({ message: 'Authorization header missing' });
+  }
+  const token = req.headers.authorization;
+  jwt.verify(token, 'secret', (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+  });
+  try{
+    const sql = 'select * from properties where propertyID = ?';
+    const [results] = await db.query(sql, req.body.propertyID, (err, result) => {
+      if (err) {
+        return res.status(500).json({ message: 'Error retrieving property' });
+      }
+      return res.status(200).json(result);
+    });
+  }
+  catch(err){
+    console.error(err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
 exports.searchProperty = async (req, res) => {
   if (!req.headers.authorization) {
       return res.status(401).json({ message: 'Authorization header missing' });
