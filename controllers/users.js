@@ -75,3 +75,71 @@ exports.resetPassword = async (req, res) => {
         res.status(500).send("Error resetting password");
     }
 };
+
+exports.editProfile = async (req, res) => {
+    try {
+      const { username, email, name, contact } = req.body;
+      const currentUser = req.user; // Assuming user details are in the request object
+  
+      // Fetch the current user data
+      const [existingUser] = await db.query('SELECT * FROM users WHERE username = ?', [
+        currentUser.username,
+      ]);
+  
+      // Check if the provided email exists for another user
+      if (email && email !== existingUser.email) {
+        const [emailExists] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+        if (emailExists.length > 0) {
+          return res.status(400).send('Email is already in use');
+        }
+      }
+  
+      // Check if the provided username exists for another user
+      if (username && username !== existingUser.username) {
+        const [usernameExists] = await db.query('SELECT * FROM users WHERE username = ?', [
+          username,
+        ]);
+        if (usernameExists.length > 0) {
+          return res.status(400).send('Username is already taken');
+        }
+      }
+  
+      // Update user data based on provided fields
+      const updateFields = [];
+      const updateValues = [];
+  
+      if (username && username !== existingUser.username) {
+        updateFields.push('username = ?');
+        updateValues.push(username);
+      }
+  
+      if (email && email !== existingUser.email) {
+        updateFields.push('email = ?');
+        updateValues.push(email);
+      }
+  
+      if (name) {
+        updateFields.push('name = ?');
+        updateValues.push(name);
+      }
+  
+      if (contact) {
+        updateFields.push('contact = ?');
+        updateValues.push(contact);
+      }
+  
+      // Update the user data in the database
+      if (updateFields.length > 0) {
+        const updateQuery = `UPDATE users SET ${updateFields.join(', ')} WHERE username = ?`;
+        updateValues.push(currentUser.username);
+  
+        await db.query(updateQuery, updateValues);
+      }
+  
+      res.status(200).send('Profile updated successfully');
+    } catch (error) {
+      console.error(error.message);
+      res.status(500).send('Error updating profile');
+    }
+  };
+  
