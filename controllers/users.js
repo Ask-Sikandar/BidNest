@@ -1,8 +1,10 @@
 const db = require('../config');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
+require('dotenv').config;
 
-
+const allowedImageTypes = ['image/jpeg', 'image/png'];
 
 function validatePassword(password) {
   // Minimum length of 8 characters
@@ -35,23 +37,23 @@ function validatePassword(password) {
 }
 
 exports.register = async (req, res) => {
-    try {
-      const { username, email, password, name, contact } = req.body;
-    // Hash the password before storing it in the database
-      if(!validatePassword(password)) {
-        return res.status(500).send("Password doesn't meet the requirements");
-      }
-      const saltRounds = 10;
-      const hashedPassword = await bcrypt.hash(password, saltRounds);
-      const newUser = await db.query(
-          "INSERT INTO users (username, email, password, name, contact) VALUES (?, ?, ?, ?, ?)",
-          [username, email, hashedPassword, name, contact]
-      );
-      res.status(200).send("User added successfully"); // Assuming the response structure here
-    } catch (error) {
-        console.error(error.message);
-        res.status(500).send("Error adding user");
+  try {
+    const { username, email, password, name, contact } = req.body;
+  // Hash the password before storing it in the database
+    if(!validatePassword(password)) {
+      return res.status(500).send("Password doesn't meet the requirements");
     }
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    const newUser = await db.query(
+        "INSERT INTO users (username, email, password, name, contact) VALUES (?, ?, ?, ?, ?)",
+        [username, email, hashedPassword, name, contact]
+    );
+    return res.status(200).send("User added successfully"); // Assuming the response structure here
+  } catch (error) {
+      console.error(error.message);
+      return res.status(500).send("Error adding user");
+  }
 };
 exports.login = async (req, res) => {
     try {
@@ -77,7 +79,7 @@ exports.login = async (req, res) => {
         }
 
         // Generate a JWT token
-        const token = jwt.sign({ email }, 'secret', { expiresIn: '1h' });
+        const token = jwt.sign({ email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
 
         // Authentication successful
         res.json({ token });
@@ -86,35 +88,83 @@ exports.login = async (req, res) => {
         res.status(500).send("Error during login");
     }
 };
+exports.viewProfile = async (req, res) => {
+  const email = req.body.email;
+
+  try {
+    const [rows] = await db.query(
+      `SELECT username, email, name, contact FROM users WHERE email = ?`,
+      [email]
+    );
+
+    if (rows.length > 0) {
+      // User found, return the first row
+      res.json(rows[0]);
+    } else {
+      // User not found
+      res.status(404).json({ message: 'User not found' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+}
+
+exports.uploadPictures = async (req, res) => {
+  const { propertyID } = req.body;
+  const files = req.files;
+  console.log(files);
+
+  // Check if there are any files uploaded
+  if (!files || files.length === 0) {
+    return res.status(400).json({ error: 'No files uploaded' });
+  }
+
+  // Save the files in a directory
+  // You can modify the path and filename as per your requirements
+  const filePaths = files.map((file) => `uploads/${file.filename}`);
+
+  // Create entries in the MySQL table
+  const sql = 'INSERT INTO pictures (propertyID, file_path) VALUES ( ?)';
+  // const values = filePaths.map((filePath) => [propertyID, filePath]);
+  // console.log(values);
+  console.log(filePaths.length);
+  const values = [];
+  for (let i = 0; i < filePaths.length; i++) {
+    values.push([propertyID, filePaths[i]]);
+  db.query(sql, values, (err, result) => {
+    if (err) {
+      console.error('Error inserting into MySQL table:', err);
+      res.status(500).json({ error: 'Failed to insert into MySQL table' });
+    } else {
+      console.log('Inserted into MySQL table:', result);
+    }
+  });
+}
+  res.json({ message: 'Files uploaded and entries created successfully' });
+};
 
 exports.createproperty = async (req, res) => {
-    if (!req.headers.authorization) {
-        return res.status(401).json({ message: 'Authorization header missing' });
-      }
-    const token = req.headers.authorization;
-    jwt.verify(token, 'secret', (err, decoded) => {
-      if (err) {
-        return res.status(401).json({ message: 'Invalid token' });
-      }
-      const property = {
-        name: req.body.name,
-        description: req.body.description,
-        bedrooms: req.body.bedrooms,
-        bathrooms: req.body.bathrooms,
-        location: req.body.location,
-        starting_bid: req.body.starting_bid,
-        end_time: req.body.end_time,
-        user_username: req.body.user_username,
-      };
-      console.log(property);
-      db.query('INSERT INTO properties SET ?', property, (err, result) => {
-        if (err) {
-          return res.status(500).json({ message: 'Error saving property' });
-        }
-        return res.status(201).json({ message: 'Property created successfully' });
-      });
-    });
+  const property = {
+    name: req.body.name,
+    description: req.body.description,
+    bedrooms: req.body.bedrooms,
+    bathrooms: req.body.bathrooms,
+    location: req.body.location,
+    starting_bid: req.body.starting_bid,
+    end_time: req.body.end_time,
+    user_username: req.body.user_username,
   };
+  const doublecheck = "Select * from properties where ?";
+  console.log(property);
+  try{
+    const [results] = await db.query('INSERT INTO properties SET ?', property);
+    return res.status(201).json({ message: 'Property created successfully' });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send("Error creating property");
+}
+};
 exports.viewProperty = async (req, res) => {
   if (!req.headers.authorization) {
     return res.status(401).json({ message: 'Authorization header missing' });
@@ -140,15 +190,6 @@ exports.viewProperty = async (req, res) => {
   }
 };
 exports.searchProperty = async (req, res) => {
-  if (!req.headers.authorization) {
-      return res.status(401).json({ message: 'Authorization header missing' });
-    }
-  const token = req.headers.authorization;
-  jwt.verify(token, 'secret', (err, decoded) => {
-  if (err) {
-    return res.status(401).json({ message: 'Invalid token' });
-    }
-  });
   try {
     const { location, starting_bid, bedrooms } = req.query;
 

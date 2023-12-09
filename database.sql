@@ -27,3 +27,8 @@ CREATE TABLE IF NOT EXISTS bids (
     FOREIGN KEY (user_username) REFERENCES users(username),
     FOREIGN KEY (property_propertyID) REFERENCES properties(propertyID)
 );
+CREATE TABLE pictures (
+    picture_id SERIAL PRIMARY KEY,
+    propertyID INT REFERENCES properties(propertyID),
+    file_path VARCHAR(255)
+);
