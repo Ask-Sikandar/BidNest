@@ -52,32 +52,26 @@ exports.login = async (req, res) => {
     }
 };
 
-exports.createproperty = async (req, res) => {
-    if (!req.headers.authorization) {
-        return res.status(401).json({ message: 'Authorization header missing' });
-      }
-    const token = req.headers.authorization;
-    jwt.verify(token, 'secret', (err, decoded) => {
-      if (err) {
-        return res.status(401).json({ message: 'Invalid token' });
-      }
-      const property = {
-        name: req.body.name,
-        description: req.body.description,
-        bedrooms: req.body.bedrooms,
-        bathrooms: req.body.bathrooms,
-        location: req.body.location,
-        starting_bid: req.body.starting_bid,
-        end_time: req.body.end_time,
-        user_username: req.body.user_username,
-      };
-      console.log(property);
-      db.query('INSERT INTO properties SET ?', property, (err, result) => {
-        if (err) {
-          return res.status(500).json({ message: 'Error saving property' });
-        }
-        return res.status(201).json({ message: 'Property created successfully' });
-      });
-    });
-  };
-  
+exports.resetPassword = async (req, res) => {
+    try {
+        const { email, newPassword } = req.body;
+
+        // Hash the new password before storing it in the database
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+        // Update user's password based on email
+        const updateQuery = `
+            UPDATE users
+            SET password = ?
+            WHERE email = ?
+        `;
+
+        await db.query(updateQuery, [hashedPassword, email]);
+
+        res.status(200).send("Password reset successful");
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).send("Error resetting password");
+    }
+};
