@@ -164,23 +164,36 @@ exports.createproperty = async (req, res) => {
 }
 };
 exports.viewProperty = async (req, res) => {
-  try{
-    const sql = 'select properties.*, pictures.file_path from properties LEFT JOIN pictures ON properties.propertyID = pictures.propertyID where properties.propertyID = ?';
-    const [results] = await db.query(sql, req.body.propertyID, (err, result) => {
-      if (err) {
-        return res.status(500).json({ message: 'Error retrieving property' });
+  try {
+    const { propertyID } = req.body;
+
+    if (!propertyID) {
+      return res.status(400).json({ message: 'Property ID is required in the request body' });
+    }
+
+    const sql = `
+      SELECT properties.*, pictures.file_path
+      FROM properties
+      LEFT JOIN pictures ON properties.propertyID = pictures.propertyID
+      WHERE properties.propertyID = ?;
+    `;
+
+    db.query(sql, [propertyID], (error, results) => {
+      if (error) {
+        console.error('Error executing query:', error);
+        return res.status(500).json({ message: 'Internal server error' });
       }
+
+      return res.status(200).json(results);
     });
-    return res.status(200).json(results);
-  }
-  catch(err){
+  } catch (err) {
     console.error(err);
     return res.status(500).json({ message: 'Internal server error' });
   }
-};
+}
 exports.searchProperty = async (req, res) => {
   try {
-    const { Region, city, location, lower_limit, upper_limit, bedrooms } = req.body;
+    const { region, city, lower_limit, upper_limit, bedrooms } = req.body;
 
     let sql = `
       SELECT properties.*, pictures.file_path
@@ -188,12 +201,12 @@ exports.searchProperty = async (req, res) => {
       LEFT JOIN pictures ON properties.propertyID = pictures.propertyID
       WHERE 1=1
     `;
-    if (Region) {
-      sql += ` AND properties.location LIKE '%${Region}%'`;
+    if (region) {
+      sql += ` AND properties.location LIKE '%${region}%'`;
     }
 
     if (lower_limit) {
-      sql += ` AND properties.starting_bid >= ${lowerlimit}`;
+      sql += ` AND properties.starting_bid >= ${lower_limit}`;
     }
 
     if (upper_limit) {
