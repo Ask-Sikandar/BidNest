@@ -164,23 +164,14 @@ exports.createproperty = async (req, res) => {
 }
 };
 exports.viewProperty = async (req, res) => {
-  if (!req.headers.authorization) {
-    return res.status(401).json({ message: 'Authorization header missing' });
-  }
-  const token = req.headers.authorization;
-  jwt.verify(token, 'secret', (err, decoded) => {
-    if (err) {
-      return res.status(401).json({ message: 'Invalid token' });
-    }
-  });
   try{
-    const sql = 'select * from properties where propertyID = ?';
+    const sql = 'select properties.*, pictures.file_path from properties LEFT JOIN pictures ON properties.propertyID = pictures.propertyID where properties.propertyID = ?';
     const [results] = await db.query(sql, req.body.propertyID, (err, result) => {
       if (err) {
         return res.status(500).json({ message: 'Error retrieving property' });
       }
-      return res.status(200).json(result);
     });
+    return res.status(200).json(results);
   }
   catch(err){
     console.error(err);
@@ -189,24 +180,32 @@ exports.viewProperty = async (req, res) => {
 };
 exports.searchProperty = async (req, res) => {
   try {
-    const { location, starting_bid, bedrooms } = req.query;
+    const { Region, city, location, lower_limit, upper_limit, bedrooms } = req.body;
 
-    let sql = 'SELECT * FROM properties WHERE 1=1';
-
-    if (location) {
-      sql += ` AND location LIKE '%${location}%'`;
+    let sql = `
+      SELECT properties.*, pictures.file_path
+      FROM properties
+      LEFT JOIN pictures ON properties.propertyID = pictures.propertyID
+      WHERE 1=1
+    `;
+    if (Region) {
+      sql += ` AND properties.location LIKE '%${Region}%'`;
     }
 
-    if (starting_bid) {
-      sql += ` AND starting_bid >= ${starting_bid}`;
+    if (lower_limit) {
+      sql += ` AND properties.starting_bid >= ${lowerlimit}`;
+    }
+
+    if (upper_limit) {
+      sql += ` AND properties.starting_bid <= ${upper_limit}`;
     }
 
     if (bedrooms) {
-      sql += ` AND bedrooms = ${bedrooms}`;
+      sql += ` AND properties.bedrooms = ${bedrooms}`;
     }
 
     const [results, fields] = await db.query(sql);
-
+    console.log(results);
     return res.status(200).json(results);
   } catch (err) {
     console.error(err);
