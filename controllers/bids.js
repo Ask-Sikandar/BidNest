@@ -4,22 +4,22 @@ const jwt = require('jsonwebtoken');
 
 exports.placeBid = async (req, res) => {
     try {
-      const { propertyId, amount } = req.body;
-      const username = req.decoded.username; // Assuming the username is encoded in the token
-  
+      const { propertyID, amount } = req.body;
+      const email = req.body.user.email; // Assuming the username is encoded in the token
+      console.log(email);
       // Check if the property exists (additional validation logic)
-      const propertyExists = await db.query('SELECT * FROM properties WHERE id = ?', [propertyId]);
+      const propertyExists = await db.query('SELECT * FROM properties WHERE propertyID = ?', [propertyID]);
       if (propertyExists.length === 0) {
         return res.status(404).json({ message: 'Property not found' });
       }
   
       // Insert the bid into the database
-      const newBid = await db.query(
-        'INSERT INTO bids (property_id, user_username, amount) VALUES (?, ?, ?)',
-        [propertyId, username, amount]
+      await db.query(
+        'INSERT INTO bids (property_propertyID, email, bid_amount) VALUES (?, ?, ?)',
+        [propertyID, email, amount]
       );
   
-      res.status(201).json({ message: 'Bid placed successfully', newBid });
+      res.status(201).json({ message: 'Bid placed successfully'});
     } catch (error) {
       console.error(error.message);
       res.status(500).json({ message: 'Error placing bid' });
