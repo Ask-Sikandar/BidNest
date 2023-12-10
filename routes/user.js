@@ -40,8 +40,8 @@ router.post("/login", controllers.login);
 router.post("/register", controllers.register);
 router.post("/create-property", authenticateToken, controllers.createproperty);
 router.post("/search-property", authenticateToken, controllers.searchProperty);
-router.post("/view-property", controllers.viewProperty);
-router.post("/upload-pictures", upload.array('images',6), controllers.uploadPictures);
+router.post("/view-property", authenticateToken, controllers.viewProperty);
+router.post("/upload-pictures", authenticateToken, upload.array('images',6), controllers.uploadPictures);
 router.post("/view-profile", authenticateToken, controllers.viewProfile);
 
 module.exports = router;

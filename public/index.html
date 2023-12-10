@@ -21,10 +21,14 @@
 
       var form = document.getElementById('uploadForm');
       var formData = new FormData(form);
+      var token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNpa2FuZGFyLjZhYUBnbWFpbC5jb20iLCJpYXQiOjE3MDIxNTMwNDQsImV4cCI6MTcwMjE1NjY0NH0.r3OPZxfLW9LpypYeZdChPU3wV6gXLVBW1jk5Yxi6WPI';
 
       fetch('http://localhost:3000/user/upload-pictures', {
         method: 'POST',
-        body: formData
+        body: formData,
+        headers: {
+          'Authorization': token
+        }
       })
       .then(response => response.json())
       .then(data => {

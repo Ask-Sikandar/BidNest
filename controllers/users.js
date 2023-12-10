@@ -113,7 +113,6 @@ exports.viewProfile = async (req, res) => {
 exports.uploadPictures = async (req, res) => {
   const { propertyID } = req.body;
   const files = req.files;
-  console.log(files);
 
   // Check if there are any files uploaded
   if (!files || files.length === 0) {
@@ -128,20 +127,19 @@ exports.uploadPictures = async (req, res) => {
   const sql = 'INSERT INTO pictures (propertyID, file_path) VALUES ( ?)';
   // const values = filePaths.map((filePath) => [propertyID, filePath]);
   // console.log(values);
-  console.log(filePaths.length);
   const values = [];
   for (let i = 0; i < filePaths.length; i++) {
     values.push([propertyID, filePaths[i]]);
-  db.query(sql, values, (err, result) => {
+    db.query(sql, values, (err, result) => {
     if (err) {
       console.error('Error inserting into MySQL table:', err);
-      res.status(500).json({ error: 'Failed to insert into MySQL table' });
+      return res.status(500).json({ error: 'Failed to insert into MySQL table' });
     } else {
       console.log('Inserted into MySQL table:', result);
     }
   });
 }
-  res.json({ message: 'Files uploaded and entries created successfully' });
+return res.json({ message: 'Files uploaded and entries created successfully.' });
 };
 
 exports.createproperty = async (req, res) => {
