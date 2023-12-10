@@ -142,6 +142,22 @@ exports.uploadPictures = async (req, res) => {
 return res.json({ message: 'Files uploaded and entries created successfully.' });
 };
 
+exports.myListings = async (req, res) => {
+  const email = req.body.user.email;
+  console.log(email);
+    const sql = 'SELECT properties.* FROM properties join users WHERE email = ?';
+    
+    db.query(sql, [email]).then((result) => {
+      
+    return res.status(200).json({result});
+
+    }).catch((err) => {
+
+      console.error(err);
+      return res.status(500).json({ message: 'Internal server error' });
+    });
+};
+
 exports.createproperty = async (req, res) => {
   const property = {
     name: req.body.name,
