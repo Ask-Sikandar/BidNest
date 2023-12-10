@@ -21,7 +21,7 @@
 
       var form = document.getElementById('uploadForm');
       var formData = new FormData(form);
-      var token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNpa2FuZGFyLjZhYUBnbWFpbC5jb20iLCJpYXQiOjE3MDIxNTMwNDQsImV4cCI6MTcwMjE1NjY0NH0.r3OPZxfLW9LpypYeZdChPU3wV6gXLVBW1jk5Yxi6WPI';
+      var token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InNpa2FuZGFyLjZhYUBnbWFpbC5jb20iLCJpYXQiOjE3MDIyMjI0NDEsImV4cCI6MTcwMjI2NTY0MX0.Xmt6uVTRZdkwKF6qsPo5zcA6lFQn4bGwH0_idz6ddts';
 
       fetch('http://localhost:3000/user/upload-pictures', {
         method: 'POST',
@@ -33,7 +33,7 @@
       .then(response => response.json())
       .then(data => {
         console.log(data);
-        alert('Files uploaded and entries created successfully');
+        alert(data);
       })
       .catch(error => {
         console.error(error);

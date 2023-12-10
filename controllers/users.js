@@ -79,7 +79,7 @@ exports.login = async (req, res) => {
         }
 
         // Generate a JWT token
-        const token = jwt.sign({ email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign({ email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '12h' });
 
         // Authentication successful
         res.json({ token });
@@ -118,7 +118,6 @@ exports.uploadPictures = async (req, res) => {
   if (!files || files.length === 0) {
     return res.status(400).json({ error: 'No files uploaded' });
   }
-
   // Save the files in a directory
   // You can modify the path and filename as per your requirements
   const filePaths = files.map((file) => `uploads/${file.filename}`);
@@ -148,8 +147,9 @@ exports.myListings = async (req, res) => {
     const sql = 'SELECT properties.* FROM properties join users WHERE email = ?';
     
     db.query(sql, [email]).then((result) => {
-      
-    return res.status(200).json({result});
+    console.log(result[0]);
+    const tosend = result[0];
+    return res.status(200).json({tosend});
 
     }).catch((err) => {
 
@@ -180,7 +180,6 @@ exports.createproperty = async (req, res) => {
 }
 };
 exports.viewProperty = async (req, res) => {
-  try {
     const { propertyID } = req.body;
 
     if (!propertyID) {
@@ -188,31 +187,37 @@ exports.viewProperty = async (req, res) => {
     }
 
     const sql = `
-      SELECT properties.*, pictures.file_path
-      FROM properties
-      LEFT JOIN pictures ON properties.propertyID = pictures.propertyID
-      WHERE properties.propertyID = ?;
+    SELECT *
+    FROM properties
+    WHERE propertyID = ?
     `;
+    
 
-    db.query(sql, [propertyID], (error, results) => {
-      if (error) {
-        console.error('Error executing query:', error);
-        return res.status(500).json({ message: 'Internal server error' });
-      }
+    db.query(sql, [propertyID]).then((result) => {
+      let inmageSql = `
+      SELECT pictures.file_path from pictures where propertyID = ?
+      `;
+      db.query(inmageSql, [propertyID]).then((img) => {
 
-      return res.status(200).json(results);
+      console.log(result[0]);
+      const tosend = result[0];
+        return res.status(200).json(
+          { info: tosend,
+            image: img[0]
+          });
+
+      });
+    }).catch((err) => {
+      console.error(err);
+      return res.status(501).json({ message: 'Query error'});
     });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: 'Internal server error' });
   }
-}
 exports.searchProperty = async (req, res) => {
   try {
     const { region, city, lower_limit, upper_limit, bedrooms } = req.body;
 
     let sql = `
-      SELECT properties.*, pictures.file_path
+      SELECT properties.*, MIN(pictures.file_path)
       FROM properties
       LEFT JOIN pictures ON properties.propertyID = pictures.propertyID
       WHERE 1=1
@@ -232,6 +237,7 @@ exports.searchProperty = async (req, res) => {
     if (bedrooms) {
       sql += ` AND properties.bedrooms = ${bedrooms}`;
     }
+    sql += ' GROUP BY properties.propertyID;'
 
     const [results, fields] = await db.query(sql);
     console.log(results);
@@ -241,5 +247,3 @@ exports.searchProperty = async (req, res) => {
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
-
-  

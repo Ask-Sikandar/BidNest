@@ -5,7 +5,9 @@ const adminRouter = require('./admin');
 const path = require('path');
 const bidRouter = require('./bids')
 const publicDirectoryPath = path.join(__dirname, '../public');
+
 router.get('/', (req,res) => {
+    // res.render('<h1>thisi is</h1>')
     res.sendFile(path.join(publicDirectoryPath, '/index.html'));
 });
 router.use("/user", userRouter);

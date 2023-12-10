@@ -2,6 +2,7 @@ require('dotenv').config();
 const express= require('express');
 const router = require('./routes/index');
 const db = require('./config');
+const cors = require('cors');
 
 const app=express();
 app.use((req, res, next) => {
@@ -12,7 +13,9 @@ app.use((req, res, next) => {
     res.header('Access-Control-Allow-Headers', 'Content-Type');
     next();
   });
-app.use(express.json());
+  app.use(cors());
+  app.use(express.json());
+  app.use(express.static('/uploads'));
 app.use("/", router);
 const PORT = process.env.PORT || 4000;
 app.listen(PORT,()=>{
