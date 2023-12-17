@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(100) UNIQUE NOT NULL,
     password VARCHAR(60) NOT NULL,
     name VARCHAR(100) NOT NULL,
-    contact VARCHAR(50) NOT NULL,
+    contact VARCHAR(50) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS properties (
@@ -22,8 +22,13 @@ CREATE TABLE IF NOT EXISTS properties (
 CREATE TABLE IF NOT EXISTS bids (
     bidID INT AUTO_INCREMENT PRIMARY KEY,
     bid_amount DECIMAL(10,2) NOT NULL,
-    user_username VARCHAR(50),
+    email VARCHAR(100),
     property_propertyID INT,
-    FOREIGN KEY (user_username) REFERENCES users(username),
+    FOREIGN KEY (email) REFERENCES users(email),
     FOREIGN KEY (property_propertyID) REFERENCES properties(propertyID)
+);
+CREATE TABLE pictures (
+    picture_id SERIAL PRIMARY KEY,
+    propertyID INT REFERENCES properties(propertyID),
+    file_path VARCHAR(255)
 );
