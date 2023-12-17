@@ -170,15 +170,17 @@ exports.createproperty = async (req, res) => {
     user_username: req.body.user_username,
   };
   const doublecheck = "Select * from properties where ?";
-  console.log(property);
-  try{
-    const [results] = await db.query('INSERT INTO properties SET ?', property);
-    return res.status(201).json({ message: 'Property created successfully' });
-  } catch (err) {
-    console.log(err);
-    return res.status(500).send("Error creating property");
+console.log(property);
+console.log(property.name);
+  db.query('INSERT INTO properties SET ?', property).then((result2) => {
+    sql = `select propertyID from properties where name = '${property.name}'`;
+    db.query(sql).then((result) => {
+      return res.status(201).json({ message: 'Property created successfully', propertyID: result[0][0].propertyID});
+    })
+  }).catch((error) => {
+      return res.status(500).json({ message: error});
+    })
 }
-};
 exports.viewProperty = async (req, res) => {
     const { propertyID } = req.body;
 
@@ -217,7 +219,7 @@ exports.searchProperty = async (req, res) => {
     const { region, city, lower_limit, upper_limit, bedrooms } = req.body;
 
     let sql = `
-      SELECT properties.*, MIN(pictures.file_path)
+      SELECT properties.*, MIN(pictures.file_path) as image
       FROM properties
       LEFT JOIN pictures ON properties.propertyID = pictures.propertyID
       WHERE 1=1

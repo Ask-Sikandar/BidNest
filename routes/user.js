@@ -7,7 +7,6 @@ const jwt = require('jsonwebtoken');
 const multer = require('multer');
 
 
-const upload = multer({ dest: 'uploads/' });
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
       cb(null, 'uploads/'); // Set the destination folder for uploaded files
@@ -17,6 +16,7 @@ const storage = multer.diskStorage({
       cb(null, uniqueSuffix + '-' + file.originalname); // Set the filename for uploaded files
     }
   });
+const upload = multer({ storage: storage });
 
 function authenticateToken(req, res, next) {
     const authHeader =  req.headers.authorization;
@@ -44,5 +44,10 @@ router.post("/view-property", authenticateToken, controllers.viewProperty);
 router.post("/upload-pictures", authenticateToken, upload.array('images',6), controllers.uploadPictures);
 router.post("/view-profile", authenticateToken, controllers.viewProfile);
 router.post("/my-listings", authenticateToken, controllers.myListings);
-
+//get contact info api for approved bids
+//accept bid
+//reject bid
+//mybids: approved, unapproved, pending 3 apis
+//view bids on my listing
+//
 module.exports = router;

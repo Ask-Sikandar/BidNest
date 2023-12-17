@@ -25,3 +25,13 @@ exports.placeBid = async (req, res) => {
       res.status(500).json({ message: 'Error placing bid' });
     }
   };    
+exports.acceptBid = async (req, res) => {
+  const email = req.body.user.email;
+  const verifysql = `select username from user where email = ?`;
+  db.query(verifysql, [email]).then((res) => {
+    console.log(res);
+    db.query('select user_username from properties where user_username = ?', res).then((result) => {
+      
+    })
+  })
+}
